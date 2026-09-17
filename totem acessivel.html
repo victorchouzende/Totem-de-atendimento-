@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Totem Hospitalar - Atendimento ao Idoso</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Desativar seleção de texto e zoom com duplo toque */
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        
+        /* Ajuste para garantir que os inputs permitam seleção de texto para digitação */
+        input {
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
+
+        /* Animação suave para os botões do corpo */
+        .body-part-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .body-part-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Melhoria na visibilidade do Placeholder para Idosos */
+        input::placeholder {
+            color: #1e3a8a !important; /* blue-900 */
+            opacity: 0.6;
+            font-weight: 700;
+        }
+
+        /* Escala de Cores para a Dor */
+        .pain-1 { background-color: #d1fae5; border-color: #10b981; color: #064e3b; }
+        .pain-2 { background-color: #ecfdf5; border-color: #10b981; color: #064e3b; }
+        .pain-3 { background-color: #fefce8; border-color: #eab308; color: #713f12; }
+        .pain-4 { background-color: #fef9c3; border-color: #eab308; color: #713f12; }
+        .pain-5 { background-color: #fff7ed; border-color: #f97316; color: #7c2d12; }
+        .pain-6 { background-color: #ffedd5; border-color: #f97316; color: #7c2d12; }
+        .pain-7 { background-color: #fef2f2; border-color: #ef4444; color: #7f1d1d; }
+        .pain-8 { background-color: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
+        .pain-9 { background-color: #fef2f2; border-color: #b91c1c; color: #450a0a; }
+        .pain-10 { background-color: #fca5a5; border-color: #991b1b; color: #450a0a; }
+
+        /* Estilo utilitário para texto vertical nos braços */
+        .vertical-text {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="w-full h-screen bg-white font-sans overflow-hidden flex flex-col">
+
+    <!-- Barra de Estado e Acessibilidade Superior -->
+    <div class="bg-blue-950 text-white p-4 flex justify-between items-center shadow-lg z-10">
+        
+        <!-- Logotipo do SUS -->
+        <div class="flex items-center bg-white px-5 py-2 rounded-xl text-[#004B87] shadow-sm select-none">
+            <div class="relative w-10 h-10 mr-3 flex-shrink-0">
+                <div class="absolute top-0 bottom-0 left-1/2 w-[14px] bg-[#004B87] transform -translate-x-1/2"></div>
+                <div class="absolute left-0 right-0 top-1/2 h-[14px] bg-[#004B87] transform -translate-y-1/2"></div>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[40px] font-black leading-none tracking-tighter">SUS</span>
+                <span class="text-[12px] font-bold leading-tight mt-[2px]">Sistema Único<br>de Saúde</span>
+            </div>
+        </div>
+        
+        <!-- Botão de Controlo de Áudio -->
+        <button id="btn-audio" class="bg-blue-800 p-4 rounded-full active:scale-90 transition-transform flex items-center space-x-2 border-2 border-blue-600">
+            <i data-lucide="volume-2" id="icon-audio-on" class="w-8 h-8"></i>
+            <i data-lucide="volume-x" id="icon-audio-off" class="w-8 h-8 text-gray-400 hidden"></i>
+            <span id="text-audio" class="text-xl font-bold hidden md:inline">Voz Ligada</span>
+        </button>
+    </div>
+
+    <!-- Área Principal de Renderização -->
+    <main class="flex-1 relative bg-gray-50 h-full">
+        
+        <!-- Tela 1: Início -->
+        <div id="screen-home" class="flex flex-col items-center justify-center h-full space-y-12 cursor-pointer active:bg-blue-50 transition-colors" onclick="setStep('need-help')">
+            <div class="bg-blue-600 p-8 rounded-full shadow-lg animate-pulse">
+                <i data-lucide="user" class="text-white w-[120px] h-[120px]"></i>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black text-blue-900 text-center px-4 leading-tight">
+                TOQUE PARA<br/>INICIAR A TRIAGEM
+            </h1>
+            <p class="text-3xl text-gray-600 font-medium">Atendimento Preferencial</p>
+        </div>
+
+        <!-- Tela 1.05: Pergunta sobre necessidade de ajuda -->
+        <div id="screen-need-help" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md w-full flex items-center">
+                <button onclick="setStep('home')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <div class="flex-1 flex flex-col items-center justify-center">
+                    <div class="flex justify-center mb-4">
+                        <i data-lucide="hand-helping" class="w-20 h-20"></i>
+                    </div>
+                    <h2 class="text-5xl font-bold leading-tight">
+                        Você precisa de ajuda para fazer sua ficha?
+                    </h2>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col md:flex-row gap-6 p-6 w-full">
+                <button onclick="handleNeedHelp(true)" class="flex-1 bg-yellow-100 border-8 border-yellow-500 rounded-3xl text-yellow-800 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    SIM
+                    <span class="text-3xl font-medium mt-4 text-center">Quero ajuda de um funcionário</span>
+                </button>
+                <button onclick="handleNeedHelp(false)" class="flex-1 bg-green-100 border-8 border-green-500 rounded-3xl text-green-700 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    NÃO
+                    <span class="text-3xl font-medium mt-4 text-center">Consigo fazer sozinho(a)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 1.06: Aguardando Assistência (Apenas se pediu ajuda) -->
+        <div id="screen-assistance" class="hidden flex-col h-full w-full items-center justify-center text-center p-8 bg-gray-100">
+             <div class="bg-yellow-50 border-[12px] border-yellow-500 rounded-[40px] p-12 max-w-5xl shadow-2xl flex flex-col items-center w-full">
+                 <i data-lucide="users" class="w-40 h-40 text-yellow-600 mb-8 animate-bounce"></i>
+                 <h2 class="text-6xl md:text-7xl font-black text-yellow-800 mb-8 leading-tight">POR FAVOR, AGUARDE AQUI</h2>
+                 <p class="text-4xl md:text-5xl font-bold text-yellow-700 mb-12">Um funcionário já foi avisado e está vindo até você para ajudar a gerar a sua ficha.</p>
+                 
+                 <div class="flex flex-col md:flex-row gap-6 w-full mt-4">
+                     <button onclick="setStep('input-name')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-4xl font-bold py-8 px-4 rounded-3xl active:scale-95 transition-transform shadow-lg">
+                         SEGUIR COM A TRIAGEM
+                     </button>
+                     <button onclick="resetApp()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-4xl font-bold py-8 px-4 rounded-3xl active:scale-95 transition-transform shadow-lg">
+                         CANCELAR E VOLTAR
+                     </button>
+                 </div>
+             </div>
+        </div>
+
+        <!-- Tela 1.1: Informe seu Nome -->
+        <div id="screen-input-name" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full">
+                <button onclick="setStep('need-help')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">Identificação</h2>
+            </div>
+            
+            <div class="flex-1 flex flex-col p-8 w-full max-w-5xl mx-auto items-center justify-center text-center">
+                <div class="w-full space-y-12 mb-12">
+                    <label for="input-name" class="text-6xl md:text-7xl font-black text-blue-950 block mb-6">Como você se chama?</label>
+                    
+                    <div class="relative w-full">
+                        <input type="text" id="input-name" 
+                            placeholder="Toque aqui para escrever seu nome" 
+                            class="w-full text-5xl md:text-7xl p-12 border-[12px] border-blue-600 bg-blue-50 rounded-[40px] focus:border-blue-800 focus:bg-white focus:outline-none shadow-[0_20px_50px_rgba(0,0,0,0.15)] text-blue-900 font-black text-center transition-all" 
+                            autocomplete="name">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-2 rounded-full text-2xl font-bold uppercase tracking-widest">Escreva aqui</div>
+                    </div>
+                </div>
+
+                <button onclick="handleName()" class="w-full max-w-3xl bg-green-600 hover:bg-green-700 text-white text-6xl font-black py-12 rounded-[40px] active:scale-95 transition-transform shadow-2xl border-b-[15px] border-green-800">
+                    CONTINUAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 1.2: Informe sua Idade -->
+        <div id="screen-input-age" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full">
+                <button onclick="setStep('input-name')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">Sua Idade</h2>
+            </div>
+            
+            <div class="flex-1 flex flex-col p-8 w-full max-w-5xl mx-auto items-center justify-center text-center">
+                <div class="w-full space-y-12 mb-12">
+                    <label for="input-age" class="text-6xl md:text-7xl font-black text-blue-950 block mb-6">Qual a sua idade?</label>
+                    
+                    <div class="relative w-full max-w-2xl mx-auto">
+                        <input type="number" id="input-age" 
+                            placeholder="Ex: 70" 
+                            class="w-full text-8xl p-14 border-[12px] border-blue-600 bg-blue-50 rounded-[40px] focus:border-blue-800 focus:bg-white focus:outline-none shadow-[0_20px_50px_rgba(0,0,0,0.15)] text-blue-900 font-black text-center transition-all" 
+                            min="0" max="130">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-2 rounded-full text-2xl font-bold uppercase tracking-widest">Digite os números</div>
+                    </div>
+                </div>
+
+                <button onclick="handleAge()" class="w-full max-w-3xl bg-green-600 hover:bg-green-700 text-white text-6xl font-black py-12 rounded-[40px] active:scale-95 transition-transform shadow-2xl border-b-[15px] border-green-800">
+                    AVANÇAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 2: Triagem de Emergência -->
+        <div id="screen-emergency" class="hidden flex-col h-full w-full">
+            <div class="bg-red-600 text-white p-8 text-center shadow-md w-full">
+                <div class="flex justify-center mb-4">
+                    <i data-lucide="alert-triangle" class="w-20 h-20"></i>
+                </div>
+                <h2 class="text-5xl font-bold leading-tight">
+                    Você está com dor forte no peito, falta de ar ou desmaio AGORA?
+                </h2>
+            </div>
+            <div class="flex-1 flex flex-col md:flex-row gap-6 p-6 w-full">
+                <button onclick="handleEmergency('Emergência')" class="flex-1 bg-red-100 border-8 border-red-500 rounded-3xl text-red-700 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    SIM
+                    <span class="text-3xl font-medium mt-4 text-center">Preciso de ajuda urgente</span>
+                </button>
+                <button onclick="setStep('symptoms')" class="flex-1 bg-green-100 border-8 border-green-500 rounded-3xl text-green-700 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    NÃO
+                    <span class="text-3xl font-medium mt-4 text-center">É outro problema</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 3: Escolha do Sintoma -->
+        <div id="screen-symptoms" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full">
+                <button onclick="setStep('emergency')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">O que você está sentindo?</h2>
+            </div>
+
+            <!-- Legenda das Cores - ATUALIZADA COM ALTO CONTRASTE -->
+            <div class="bg-white p-4 text-center border-b-4 border-gray-200 shadow-sm">
+                <p class="text-2xl font-bold text-gray-700 mb-2">Guie-se pela cor de cada botão abaixo:</p>
+                <div class="flex flex-wrap justify-center gap-3 text-xl font-black uppercase">
+                    <span class="text-orange-950 bg-orange-200 px-4 py-2 rounded-xl border-4 border-orange-700 shadow-sm">Laranja = Febre / Gripe</span>
+                    <span class="text-amber-950 bg-amber-200 px-4 py-2 rounded-xl border-4 border-amber-600 shadow-sm">Amarelo = Dor no Corpo</span>
+                    <span class="text-purple-950 bg-purple-200 px-4 py-2 rounded-xl border-4 border-purple-700 shadow-sm">Roxo = Pressão Alta</span>
+                    <span class="text-blue-950 bg-blue-200 px-4 py-2 rounded-xl border-4 border-blue-700 shadow-sm">Azul = Exames</span>
+                </div>
+            </div>
+
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 p-6 overflow-y-auto w-full">
+                <button onclick="handleSymptom('Febre ou Gripe')" class="border-[10px] rounded-3xl text-4xl md:text-5xl font-black active:scale-95 transition-transform flex items-center p-8 shadow-xl bg-orange-200 border-orange-700 text-orange-950">
+                    <i data-lucide="thermometer" class="w-20 h-20 mr-6 flex-shrink-0"></i>
+                    <span class="text-left leading-tight">Febre ou Gripe</span>
+                </button>
+                <button onclick="handleSymptom('Dor no Corpo')" class="border-[10px] rounded-3xl text-4xl md:text-5xl font-black active:scale-95 transition-transform flex items-center p-8 shadow-xl bg-amber-200 border-amber-600 text-amber-950">
+                    <i data-lucide="activity" class="w-20 h-20 mr-6 flex-shrink-0"></i>
+                    <span class="text-left leading-tight">Dor no Corpo</span>
+                </button>
+                <button onclick="handleSymptom('Pressão Alta / Tontura')" class="border-[10px] rounded-3xl text-4xl md:text-5xl font-black active:scale-95 transition-transform flex items-center p-8 shadow-xl bg-purple-200 border-purple-700 text-purple-950">
+                    <i data-lucide="heart-pulse" class="w-20 h-20 mr-6 flex-shrink-0"></i>
+                    <span class="text-left leading-tight">Pressão Alta / Tontura</span>
+                </button>
+                <button onclick="handleSymptom('Exames ou Consulta')" class="border-[10px] rounded-3xl text-4xl md:text-5xl font-black active:scale-95 transition-transform flex items-center p-8 shadow-xl bg-blue-200 border-blue-700 text-blue-950">
+                    <i data-lucide="stethoscope" class="w-20 h-20 mr-6 flex-shrink-0"></i>
+                    <span class="text-left leading-tight">Exames ou Consulta</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 3.5: Mapa do Corpo -->
+        <div id="screen-body-map" class="hidden flex-col h-full w-full bg-gray-100">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full shrink-0">
+                <button onclick="setStep('symptoms')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">Onde está doendo?</h2>
+            </div>
+
+            <!-- Corpo dos Mannequins usando Grid -->
+            <div class="flex-1 overflow-y-auto w-full p-6">
+                <div class="flex flex-col lg:flex-row gap-12 items-center lg:items-start justify-center max-w-7xl mx-auto">
+                    
+                    <!-- FRENTE -->
+                    <div class="flex flex-col items-center bg-white p-8 md:p-12 rounded-[40px] shadow-2xl border-[8px] border-blue-50 w-full max-w-[550px]">
+                        
+                        <div class="bg-blue-600 text-white px-8 py-4 rounded-full mb-10 shadow-lg flex items-center gap-4">
+                            <i data-lucide="user" class="w-10 h-10"></i>
+                            <h3 class="text-4xl font-black tracking-widest">FRENTE</h3>
+                        </div>
+
+                        <!-- Grid do Corpo Frente -->
+                        <div class="grid grid-cols-[90px_130px_130px_90px] gap-3 mx-auto w-fit">
+                            <!-- Cabeça -->
+                            <button onclick="handleBodyPart('Cabeça')" class="col-span-2 col-start-2 w-36 h-36 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[50px] shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Cabeça</button>
+
+                            <!-- Ombro Dir (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Ombro Direito')" class="col-start-1 row-start-2 w-20 h-20 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-full shadow-lg text-sm font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Ombro</button>
+
+                            <!-- Peito -->
+                            <button onclick="handleBodyPart('Peito')" class="col-span-2 col-start-2 row-start-2 w-full h-32 bg-sky-100 border-[8px] border-sky-600 rounded-3xl shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Peito</button>
+
+                            <!-- Ombro Esq (Direita na tela) -->
+                            <button onclick="handleBodyPart('Ombro Esquerdo')" class="col-start-4 row-start-2 w-20 h-20 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-full shadow-lg text-sm font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Ombro</button>
+
+                            <!-- Braço Dir (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Braço Direito')" class="col-start-1 row-start-3 w-20 h-48 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-2xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95 vertical-text">Braço</button>
+
+                            <!-- Barriga -->
+                            <button onclick="handleBodyPart('Barriga')" class="col-span-2 col-start-2 row-start-3 w-full h-32 bg-sky-100 border-[8px] border-sky-600 rounded-3xl shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Barriga</button>
+
+                            <!-- Braço Esq (Direita na tela) -->
+                            <button onclick="handleBodyPart('Braço Esquerdo')" class="col-start-4 row-start-3 w-20 h-48 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-2xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95 vertical-text">Braço</button>
+
+                            <!-- Mão Dir (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Mão Direita')" class="col-start-1 row-start-4 w-20 h-20 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-sm font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Mão</button>
+
+                            <!-- Perna Dir (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Perna Direita')" class="col-start-2 row-start-4 w-28 h-48 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center text-center leading-tight hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Perna<br>Dir.</button>
+
+                            <!-- Perna Esq (Direita na tela) -->
+                            <button onclick="handleBodyPart('Perna Esquerda')" class="col-start-3 row-start-4 w-28 h-48 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center text-center leading-tight hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Perna<br>Esq.</button>
+
+                            <!-- Mão Esq (Direita na tela) -->
+                            <button onclick="handleBodyPart('Mão Esquerda')" class="col-start-4 row-start-4 w-20 h-20 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[40px] shadow-lg text-sm font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Mão</button>
+
+                            <!-- Pé Dir (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Pé Direito')" class="col-start-2 row-start-5 w-28 h-24 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[30px] shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Pé</button>
+
+                            <!-- Pé Esq (Direita na tela) -->
+                            <button onclick="handleBodyPart('Pé Esquerdo')" class="col-start-3 row-start-5 w-28 h-24 mx-auto bg-sky-100 border-[8px] border-sky-600 rounded-[30px] shadow-lg text-3xl font-black text-sky-950 flex items-center justify-center hover:bg-sky-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Pé</button>
+                        </div>
+                    </div>
+
+                    <!-- COSTAS -->
+                    <div class="flex flex-col items-center bg-white p-8 md:p-12 rounded-[40px] shadow-2xl border-[8px] border-gray-200 w-full max-w-[550px]">
+                        
+                        <div class="bg-gray-600 text-white px-8 py-4 rounded-full mb-10 shadow-lg flex items-center gap-4">
+                            <i data-lucide="user" class="w-10 h-10 transform rotate-180"></i>
+                            <h3 class="text-4xl font-black tracking-widest">COSTAS</h3>
+                        </div>
+
+                        <!-- Grid do Corpo Costas (Invertido: Esq na esquerda da tela, Dir na direita da tela) -->
+                        <div class="grid grid-cols-[90px_130px_130px_90px] gap-3 mx-auto w-fit">
+                            <!-- Nuca -->
+                            <button onclick="handleBodyPart('Nuca')" class="col-span-2 col-start-2 w-36 h-36 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[50px] shadow-lg text-3xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Nuca</button>
+
+                            <!-- Ombro Esq (Esquerda na tela, visto de trás) -->
+                            <button onclick="handleBodyPart('Ombro Esquerdo (Costas)')" class="col-start-1 row-start-2 w-20 h-20 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-full shadow-lg text-sm font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Ombro</button>
+
+                            <!-- Costas Superior -->
+                            <button onclick="handleBodyPart('Costas Superior')" class="col-span-2 col-start-2 row-start-2 w-full h-32 bg-gray-100 border-[8px] border-gray-500 rounded-3xl shadow-lg text-3xl font-black text-gray-900 flex items-center justify-center text-center leading-tight hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Costas<br>Sup.</button>
+
+                            <!-- Ombro Dir (Direita na tela, visto de trás) -->
+                            <button onclick="handleBodyPart('Ombro Direito (Costas)')" class="col-start-4 row-start-2 w-20 h-20 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-full shadow-lg text-sm font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Ombro</button>
+
+                            <!-- Braço Esq (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Braço Esquerdo (Costas)')" class="col-start-1 row-start-3 w-20 h-48 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-2xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95 vertical-text">Braço</button>
+
+                            <!-- Lombar -->
+                            <button onclick="handleBodyPart('Lombar')" class="col-span-2 col-start-2 row-start-3 w-full h-32 bg-gray-100 border-[8px] border-gray-500 rounded-3xl shadow-lg text-3xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Lombar</button>
+
+                            <!-- Braço Dir (Direita na tela) -->
+                            <button onclick="handleBodyPart('Braço Direito (Costas)')" class="col-start-4 row-start-3 w-20 h-48 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-2xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95 vertical-text">Braço</button>
+
+                            <!-- Mão Esq (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Mão Esquerda (Costas)')" class="col-start-1 row-start-4 w-20 h-20 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-sm font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Mão</button>
+
+                            <!-- Perna Esq (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Perna Esquerda (Costas)')" class="col-start-2 row-start-4 w-28 h-48 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-3xl font-black text-gray-900 flex items-center justify-center text-center leading-tight hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Perna<br>Esq.</button>
+
+                            <!-- Perna Dir (Direita na tela) -->
+                            <button onclick="handleBodyPart('Perna Direita (Costas)')" class="col-start-3 row-start-4 w-28 h-48 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-3xl font-black text-gray-900 flex items-center justify-center text-center leading-tight hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Perna<br>Dir.</button>
+
+                            <!-- Mão Dir (Direita na tela) -->
+                            <button onclick="handleBodyPart('Mão Direita (Costas)')" class="col-start-4 row-start-4 w-20 h-20 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[40px] shadow-lg text-sm font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Mão</button>
+
+                            <!-- Pé Esq (Esquerda na tela) -->
+                            <button onclick="handleBodyPart('Pé Esquerdo (Costas)')" class="col-start-2 row-start-5 w-28 h-24 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[30px] shadow-lg text-2xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Pé</button>
+
+                            <!-- Pé Dir (Direita na tela) -->
+                            <button onclick="handleBodyPart('Pé Direito (Costas)')" class="col-start-3 row-start-5 w-28 h-24 mx-auto bg-gray-100 border-[8px] border-gray-500 rounded-[30px] shadow-lg text-2xl font-black text-gray-900 flex items-center justify-center hover:bg-gray-200 active:bg-blue-700 active:border-blue-900 active:text-white transition-all transform active:scale-95">Pé</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 3.5.1: Sub-partes do Corpo (NOVA TELA COM IMAGEM) -->
+        <div id="screen-sub-body-map" class="hidden flex-col h-full w-full bg-gray-100">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full shrink-0">
+                <button onclick="setStep('body-map')" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 id="sub-body-title" class="text-5xl font-bold flex-1 uppercase">Onde exatamente?</h2>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-start p-8 w-full overflow-y-auto">
+                <p class="text-3xl text-gray-600 font-bold mb-6 text-center">Toque na região específica onde sente dor:</p>
+                
+                <!-- GUIA VISUAL DO BRAÇO -->
+                <div id="sub-body-visual-arm" class="hidden w-full max-w-4xl mx-auto mb-10 bg-white p-8 rounded-[40px] shadow-2xl border-[8px] border-sky-100 flex-col items-center">
+                    <h4 class="text-3xl font-black text-sky-900 mb-8 uppercase tracking-wider text-center flex items-center gap-4">
+                        <i data-lucide="map" class="w-8 h-8"></i> Referência do Braço
+                    </h4>
+                    
+                    <div class="relative w-full max-w-[320px] md:max-w-[400px] h-[450px] md:h-[550px] mx-auto mt-4 mb-4 flex justify-center">
+                        
+                        <div class="absolute inset-0 z-20 pointer-events-none">
+                            <div class="absolute top-[26%] -left-[10%] md:-left-[20%] flex items-center gap-2">
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Parte Superior</span>
+                                <i data-lucide="arrow-right" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                            </div>
+
+                            <div class="absolute top-[50%] -right-[15%] md:-right-[25%] flex items-center gap-2 z-30">
+                                <i data-lucide="arrow-left" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Cotovelo</span>
+                            </div>
+
+                            <div class="absolute top-[65%] left-[0%] md:-left-[10%] flex items-center gap-2">
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Antebraço</span>
+                                <i data-lucide="arrow-right" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                            </div>
+
+                            <div class="absolute top-[80%] -left-[5%] md:-left-[15%] flex items-center gap-2">
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Pulso</span>
+                                <i data-lucide="arrow-right" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                            </div>
+                        </div>
+
+                        <!-- Ilustração Anatômica do Braço -->
+                        <svg viewBox="0 0 200 450" preserveAspectRatio="xMidYMid meet" class="h-full w-auto drop-shadow-[0_15px_25px_rgba(0,0,0,0.15)] relative z-10">
+                            <defs>
+                                <linearGradient id="humanSkin" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f5d0b5" />
+                                    <stop offset="50%" stop-color="#e6b999" />
+                                    <stop offset="100%" stop-color="#d4a373" />
+                                </linearGradient>
+                            </defs>
+
+                            <path d="
+                                M 90, 20
+                                C 130, 80, 170, 150, 175, 230
+                                C 177, 250, 160, 270, 145, 280
+                                C 120, 310, 80, 360, 65, 390
+                                L 35, 370
+                                C 50, 330, 95, 280, 115, 245
+                                C 125, 230, 125, 210, 115, 190
+                                C 95, 150, 65, 80, 50, 20
+                                Z" 
+                                fill="url(#humanSkin)" stroke="#c08a5d" stroke-width="3" stroke-linejoin="round"/>
+                            
+                            <path d="M 115, 190 C 110, 140, 90, 90, 65, 40" fill="none" stroke="#c08a5d" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                            <path d="M 118, 235 C 130, 245, 145, 240, 155, 230" fill="none" stroke="#c08a5d" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                            <path d="M 125, 245 C 135, 250, 145, 248, 150, 240" fill="none" stroke="#c08a5d" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+                            <path d="M 175, 230 C 170, 240, 160, 250, 150, 255" fill="none" stroke="#c08a5d" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+                            <circle cx="105" cy="130" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="105" cy="130" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <circle cx="160" cy="235" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="160" cy="235" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <circle cx="100" cy="305" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="100" cy="305" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <circle cx="55" cy="370" r="12" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="6;16;6" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="55" cy="370" r="5" fill="#ef4444" stroke="white" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- GUIA VISUAL DA PERNA (NOVO) -->
+                <div id="sub-body-visual-leg" class="hidden w-full max-w-4xl mx-auto mb-10 bg-white p-8 rounded-[40px] shadow-2xl border-[8px] border-sky-100 flex-col items-center">
+                    <h4 class="text-3xl font-black text-sky-900 mb-8 uppercase tracking-wider text-center flex items-center gap-4">
+                        <i data-lucide="map" class="w-8 h-8"></i> Referência da Perna
+                    </h4>
+                    
+                    <div class="relative w-full max-w-[320px] md:max-w-[400px] h-[500px] md:h-[600px] mx-auto mt-4 mb-4 flex justify-center">
+                        
+                        <!-- Rótulos flutuantes da Perna -->
+                        <div class="absolute inset-0 z-20 pointer-events-none">
+                            
+                            <!-- Coxa -->
+                            <div class="absolute top-[20%] -left-[10%] md:-left-[20%] flex items-center gap-2">
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Coxa</span>
+                                <i data-lucide="arrow-right" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                            </div>
+
+                            <!-- Joelho -->
+                            <div class="absolute top-[48%] -right-[15%] md:-right-[25%] flex items-center gap-2 z-30">
+                                <i data-lucide="arrow-left" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Joelho</span>
+                            </div>
+
+                            <!-- Canela / Panturrilha -->
+                            <div class="absolute top-[70%] left-[0%] md:-left-[10%] flex items-center gap-2">
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md text-center leading-tight">Canela /<br>Panturrilha</span>
+                                <i data-lucide="arrow-right" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                            </div>
+
+                            <!-- Tornozelo -->
+                            <div class="absolute top-[88%] -right-[15%] md:-right-[25%] flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-8 h-8 md:w-12 md:h-12 text-red-500 animate-pulse drop-shadow-lg"></i>
+                                <span class="text-xl md:text-3xl font-black text-sky-900 bg-white/90 px-3 py-1 border-2 border-sky-200 rounded-xl shadow-md">Tornozelo</span>
+                            </div>
+                        </div>
+
+                        <!-- Ilustração Anatômica da Perna -->
+                        <svg viewBox="0 0 200 500" preserveAspectRatio="xMidYMid meet" class="h-full w-auto drop-shadow-[0_15px_25px_rgba(0,0,0,0.15)] relative z-10">
+                            <!-- Mesma tonalidade realista de pele -->
+                            <defs>
+                                <linearGradient id="humanSkinLeg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f5d0b5" />
+                                    <stop offset="50%" stop-color="#e6b999" />
+                                    <stop offset="100%" stop-color="#d4a373" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Silhueta Muscular Realista da Perna -->
+                            <path d="
+                                M 60, 10
+                                C 140, 10, 150, 100, 140, 200
+                                C 135, 230, 140, 250, 135, 270
+                                C 150, 320, 140, 390, 110, 430
+                                C 120, 450, 130, 470, 140, 480
+                                L 60, 480
+                                C 65, 460, 75, 440, 75, 410
+                                C 70, 350, 80, 300, 95, 270
+                                C 90, 240, 80, 220, 75, 200
+                                C 50, 100, 50, 20, 60, 10
+                                Z" 
+                                fill="url(#humanSkinLeg)" stroke="#c08a5d" stroke-width="3" stroke-linejoin="round"/>
+                            
+                            <!-- Detalhes Anatômicos (Músculos e Dobras da Perna) -->
+                            <!-- Dobra do joelho -->
+                            <path d="M 95, 270 C 105, 280, 125, 280, 135, 270" fill="none" stroke="#c08a5d" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+                            <!-- Linha da Tíbia (Canela) -->
+                            <path d="M 100, 300 C 95, 340, 90, 380, 90, 420" fill="none" stroke="#c08a5d" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+                            <!-- Detalhe Tornozelo (Ossinho) -->
+                            <circle cx="105" cy="445" r="8" fill="none" stroke="#c08a5d" stroke-width="2" opacity="0.4" />
+
+                            <!-- Círculos Alvos Vermelhos (Padronizados) -->
+                            
+                            <!-- Coxa -->
+                            <circle cx="100" cy="120" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="100" cy="120" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <!-- Joelho -->
+                            <circle cx="115" cy="270" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="115" cy="270" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <!-- Canela / Panturrilha -->
+                            <circle cx="110" cy="360" r="14" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="8;20;8" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="110" cy="360" r="7" fill="#ef4444" stroke="white" stroke-width="2" />
+
+                            <!-- Tornozelo -->
+                            <circle cx="105" cy="450" r="12" fill="none" stroke="#ef4444" stroke-width="3">
+                                <animate attributeName="r" values="6;16;6" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="105" cy="450" r="5" fill="#ef4444" stroke="white" stroke-width="2" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Os botões serão injetados aqui via JS -->
+                <div id="sub-body-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl pb-8">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 3.6: Nível da Dor -->
+        <div id="screen-pain-level" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full">
+                <!-- Alterado o onclick para função que sabe voltar para a tela correta -->
+                <button onclick="goBackFromPainLevel()" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">Nível da Dor</h2>
+            </div>
+            <div class="flex-1 flex flex-col items-center justify-center p-8 w-full max-w-7xl mx-auto space-y-12">
+                <h3 class="text-5xl font-black text-gray-800 text-center leading-tight">
+                    Qual o nível da dor na região: <br/>
+                    <span id="pain-region-name" class="text-blue-700 uppercase"></span>?
+                </h3>
+                <p class="text-3xl text-gray-600 font-bold">Toque no número que representa sua dor:</p>
+                <div class="flex flex-row gap-2 w-full justify-between items-center">
+                    <button onclick="handlePainLevel(1)" class="pain-1 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">1</button>
+                    <button onclick="handlePainLevel(2)" class="pain-2 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">2</button>
+                    <button onclick="handlePainLevel(3)" class="pain-3 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">3</button>
+                    <button onclick="handlePainLevel(4)" class="pain-4 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">4</button>
+                    <button onclick="handlePainLevel(5)" class="pain-5 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">5</button>
+                    <button onclick="handlePainLevel(6)" class="pain-6 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">6</button>
+                    <button onclick="handlePainLevel(7)" class="pain-7 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">7</button>
+                    <button onclick="handlePainLevel(8)" class="pain-8 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">8</button>
+                    <button onclick="handlePainLevel(9)" class="pain-9 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">9</button>
+                    <button onclick="handlePainLevel(10)" class="pain-10 border-4 md:border-8 rounded-2xl md:rounded-3xl flex-1 h-32 md:h-48 text-4xl md:text-7xl font-black active:scale-90 transition-transform shadow-lg">10</button>
+                </div>
+                <div class="flex justify-between w-full px-4 text-3xl font-black">
+                    <div class="flex flex-col items-center">
+                        <i data-lucide="smile" class="text-green-600 w-16 h-16 mb-2"></i>
+                        <span class="text-green-600">DOR LEVE</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i data-lucide="frown" class="text-red-700 w-16 h-16 mb-2"></i>
+                        <span class="text-red-700">DOR FORTE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 4: Cadeira de Rodas -->
+        <div id="screen-wheelchair" class="hidden flex-col h-full w-full">
+            <div class="bg-blue-900 text-white p-8 text-center shadow-md flex items-center w-full">
+                <button onclick="goBackFromWheelchair()" class="p-4 active:scale-90">
+                    <i data-lucide="chevron-left" class="w-[60px] h-[60px]"></i>
+                </button>
+                <h2 class="text-5xl font-bold flex-1">Precisa de Cadeira de Rodas?</h2>
+            </div>
+            <div class="flex-1 flex flex-col md:flex-row gap-6 p-6 w-full">
+                <button onclick="handleWheelchair(true)" class="flex-1 bg-blue-100 border-8 border-blue-500 rounded-3xl text-blue-800 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    SIM
+                    <span class="text-3xl font-medium mt-4 text-center">Por favor, tragam uma</span>
+                </button>
+                <button onclick="handleWheelchair(false)" class="flex-1 bg-gray-100 border-8 border-gray-400 rounded-3xl text-gray-700 text-6xl font-black active:scale-95 transition-transform flex flex-col items-center justify-center p-8 shadow-xl">
+                    NÃO
+                    <span class="text-3xl font-medium mt-4 text-center">Consigo andar sozinho(a)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 5: Ficha Final -->
+        <div id="screen-ticket" class="hidden flex-col md:flex-row h-full w-full items-center justify-center bg-gray-100 p-6 md:p-12 gap-8">
+            <div id="ticket-left-message" class="hidden flex-1 flex-col justify-center items-start text-left space-y-6">
+                <div class="bg-blue-600 text-white p-4 rounded-2xl shadow-lg">
+                    <i data-lucide="info" class="w-16 h-16"></i>
+                </div>
+                <h2 class="text-5xl md:text-7xl font-black text-blue-900 leading-[1.1]">
+                    POR FAVOR,<br/>DIRIJA-SE À<br/><span class="text-blue-600">RECEPÇÃO</span>
+                </h2>
+                <p class="text-3xl md:text-4xl font-bold text-gray-700 leading-snug">
+                    Caso já tenha um exame ou consulta agendada, ou se quiser agendar, apresente a sua ficha no balcão quando for chamado.
+                </p>
+            </div>
+            <div class="flex-1 flex justify-center w-full max-w-2xl">
+                <div id="ticket-card-container" class="bg-white border-4 border-gray-300 rounded-3xl shadow-2xl p-8 w-full text-center relative overflow-hidden">
+                    <div id="ticket-header-band" class="absolute top-0 left-0 right-0 h-8 bg-blue-600"></div>
+                    <h2 class="text-3xl font-bold text-gray-600 mt-6 mb-2">SUA FICHA FOI IMPRESSA</h2>
+                    <p id="ticket-patient-info" class="text-2xl font-semibold text-gray-800 mb-2 mt-2 uppercase"></p>
+                    <div id="ticket-symptom-info" class="text-xl font-bold text-blue-800 mb-6 bg-blue-100 py-2 px-6 rounded-xl hidden flex-col"></div>
+                    <div id="ticket-urgency-bg" class="py-12 rounded-2xl mb-8 bg-blue-50">
+                        <!-- O texto agora usa innerHTML para adicionar detalhes de tempo abaixo da classificação -->
+                        <p id="ticket-urgency-text" class="text-4xl font-bold mb-4 text-blue-600">NORMAL</p>
+                        <h1 id="ticket-number" class="text-8xl md:text-[120px] font-black tracking-tighter text-blue-900">P-00</h1>
+                    </div>
+                    <div class="flex items-center justify-center space-x-4 mb-8 text-2xl text-gray-800 font-semibold bg-gray-100 p-6 rounded-2xl">
+                        <i data-lucide="printer" class="text-gray-600 w-10 h-10"></i>
+                        <span>Retire o papel e aguarde</span>
+                    </div>
+                    <div id="ticket-wheelchair-alert" class="hidden bg-yellow-100 text-yellow-800 p-4 rounded-xl text-xl font-bold border-2 border-yellow-400 mb-8">
+                        Aviso enviado: Funcionário trará uma cadeira de rodas.
+                    </div>
+                    <button onclick="resetApp()" class="w-full bg-blue-900 text-white text-4xl font-bold py-6 rounded-2xl active:scale-95 transition-transform">
+                        FINALIZAR E VOLTAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        let currentStep = 'home';
+        let audioEnabled = true;
+        let lastBodySelectionStep = 'body-map';
+
+        let ticketData = {
+            name: '', age: '', symptom: '', bodyPart: '', painLevel: 0, urgency: '', needsWheelchair: false, ticketNumber: '', manchester: null
+        };
+
+        const screens = ['home', 'need-help', 'assistance', 'input-name', 'input-age', 'emergency', 'symptoms', 'body-map', 'sub-body-map', 'pain-level', 'wheelchair', 'ticket'];
+
+        // =========================================================================
+        // FUNÇÃO DE INTEGRAÇÃO COM O GOOGLE SHEETS
+        // =========================================================================
+        function enviarDadosParaPlanilha(dados) {
+            // ATENÇÃO: Cole a URL do seu App Script aqui entre as aspas
+            const scriptURL = 'https://script.google.com/macros/s/AKfycby3CXwyyMbns0P5beJGRWZjDO5oXKPuuOWbD0uCaCwK7TEw1Q-cQO390VoquXHdwBxiqQ/exec';
+
+            if (scriptURL === 'COLE_AQUI_A_URL_DO_SEU_GOOGLE_APPS_SCRIPT') {
+                console.error("ERRO: Você precisa substituir a URL do scriptURL no código HTML!");
+                alert("Erro: A URL do Google Sheets não foi configurada no sistema.");
+                return;
+            }
+
+            // Preparando os dados no formato exato que a planilha espera
+            const payload = {
+                dataHora: new Date().toLocaleString('pt-BR'),
+                ficha: dados.ticketNumber,
+                nome: dados.name,
+                idade: dados.age,
+                sintoma: dados.symptom || dados.urgency,
+                localDor: dados.bodyPart || 'N/A',
+                nivelDor: dados.painLevel || 0,
+                cadeiraRodas: dados.needsWheelchair ? 'Sim' : 'Não',
+                classificacao: dados.manchester ? dados.manchester.colorName : 'Não classificado'
+            };
+
+            // Envio 100% à prova de falhas para o Google Sheets (Form URL Encoded)
+            fetch(scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    'dados': JSON.stringify(payload)
+                })
+            })
+            .then(response => {
+                console.log('Sucesso! Ficha enviada para a recepção (Google Sheets).');
+            })
+            .catch(error => {
+                console.error('Erro ao enviar os dados para a planilha:', error);
+            });
+        }
+        // =========================================================================
+
+
+        function speak(text) {
+            if (!audioEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); 
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'pt-BR';
+            msg.rate = 0.85; 
+            window.speechSynthesis.speak(msg);
+        }
+
+        function announceStep(step) {
+            switch(step) {
+                case 'home': speak("Bem-vindo ao Sistema Único de Saúde. Toque na tela para iniciar a triagem."); break;
+                case 'need-help': speak("Você precisa de ajuda de um funcionário para fazer a sua ficha? Toque em SIM para chamar alguém, ou NÃO para continuar sozinho."); break;
+                case 'assistance': speak("Por favor, aguarde aqui. Um funcionário já foi avisado e está vindo até você para ajudar. Se preferir continuar agora, toque no botão verde seguir com a triagem."); break;
+                case 'input-name': speak("Como você se chama? Por favor, toque no campo azul e escreva o seu nome."); break;
+                case 'input-age': speak("Obrigado. Agora, por favor, escreva a sua idade."); break;
+                case 'emergency': speak("Você está sentindo dor forte no peito, falta de ar ou desmaio agora?"); break;
+                case 'symptoms': speak("O que você está sentindo? Para facilitar, guie-se pela cor do botão. Toque no Laranja para Febre ou Gripe. Amarelo para Dor no Corpo. Roxo para Pressão Alta ou Tontura. Ou Azul para Exames e Consultas."); break;
+                case 'body-map': speak("Onde está doendo? Toque na parte do corpo que dói."); break;
+                case 'sub-body-map': speak("Em qual parte exata está doendo?"); break;
+                case 'pain-level': speak("Qual o nível da dor? Sendo um para leve e dez para insuportável."); break;
+                case 'wheelchair': speak("Você precisa de uma cadeira de rodas?"); break;
+                case 'ticket': 
+                    let ticketMsg = "Sua ficha é a " + ticketData.ticketNumber + ". Por favor, pegue o papel impresso e aguarde.";
+                    if (ticketData.symptom === 'Exames ou Consulta') ticketMsg += " Se dirija à recepção quando sua ficha for chamada.";
+                    speak(ticketMsg); break;
+            }
+        }
+
+        function setStep(step) {
+            screens.forEach(s => {
+                const el = document.getElementById(`screen-${s}`);
+                if (el) { el.classList.add('hidden'); el.classList.remove('flex', 'flex-col', 'flex-row'); }
+            });
+            const target = document.getElementById(`screen-${step}`);
+            if (target) {
+                target.classList.remove('hidden');
+                if (step === 'ticket' && ticketData.symptom === 'Exames ou Consulta') target.classList.add('flex', 'flex-col', 'md:flex-row');
+                else target.classList.add('flex', 'flex-col');
+            }
+            if (step === 'pain-level') {
+                const regionName = document.getElementById('pain-region-name');
+                if (regionName) regionName.innerText = ticketData.bodyPart;
+            }
+            currentStep = step;
+            announceStep(step);
+            
+            if(step === 'input-name') setTimeout(() => document.getElementById('input-name').focus(), 500);
+            if(step === 'input-age') setTimeout(() => document.getElementById('input-age').focus(), 500);
+        }
+
+        function handleNeedHelp(needsHelp) {
+            if (needsHelp) {
+                setStep('assistance');
+            } else {
+                setStep('input-name');
+            }
+        }
+
+        function handleName() {
+            const nameInput = document.getElementById('input-name').value.trim();
+            if (nameInput === "") { speak("Por favor, escreva seu nome antes de continuar."); return; }
+            ticketData.name = nameInput;
+            setStep('input-age');
+        }
+
+        function handleAge() {
+            const ageInput = document.getElementById('input-age').value.trim();
+            if (ageInput === "") { speak("Por favor, informe a sua idade."); return; }
+            ticketData.age = ageInput;
+            setStep('emergency');
+        }
+
+        // ====== PROTOCOLO DE MANCHESTER - LÓGICA DE CLASSIFICAÇÃO ======
+        function calculateManchester() {
+            const age = parseInt(ticketData.age) || 0;
+
+            // 1. Vermelho (Emergência - 0 min)
+            if (ticketData.urgency === 'Emergência') {
+                return { colorCode: 'red', colorName: 'Vermelho', urgencyName: 'Emergência', prefix: 'V', maxWait: '0 min' };
+            }
+
+            // 2. Laranja (Muito Urgente - 10 min)
+            if (ticketData.painLevel >= 8) {
+                return { colorCode: 'orange', colorName: 'Laranja', urgencyName: 'Muito Urgente', prefix: 'L', maxWait: '10 min' };
+            }
+
+            // 3. Amarelo (Urgente - 60 min)
+            if (ticketData.painLevel >= 5 && ticketData.painLevel < 8) {
+                return { colorCode: 'yellow', colorName: 'Amarelo', urgencyName: 'Urgente', prefix: 'A', maxWait: '60 min' };
+            }
+            if (ticketData.symptom === 'Pressão Alta / Tontura') {
+                return { colorCode: 'yellow', colorName: 'Amarelo', urgencyName: 'Urgente', prefix: 'A', maxWait: '60 min' };
+            }
+            if (ticketData.symptom === 'Febre ou Gripe' && age >= 80) {
+                 // Idosos acima de 80 com febre/gripe ganham prioridade extra
+                 return { colorCode: 'yellow', colorName: 'Amarelo', urgencyName: 'Urgente', prefix: 'A', maxWait: '60 min' };
+            }
+
+            // 4. Verde (Pouco Urgente - 120 min)
+            if (ticketData.painLevel > 0 && ticketData.painLevel < 5) {
+                return { colorCode: 'green', colorName: 'Verde', urgencyName: 'Pouco Urgente', prefix: 'VD', maxWait: '120 min' };
+            }
+            if (ticketData.symptom === 'Febre ou Gripe' || ticketData.symptom === 'Dor no Corpo') {
+                return { colorCode: 'green', colorName: 'Verde', urgencyName: 'Pouco Urgente', prefix: 'VD', maxWait: '120 min' };
+            }
+
+            // 5. Azul (Não Urgente - 240 min)
+            return { colorCode: 'blue', colorName: 'Azul', urgencyName: 'Não Urgente', prefix: 'AZ', maxWait: '240 min' };
+        }
+
+        function generateManchesterTicket(prefix) {
+            const number = Math.floor(Math.random() * 99) + 1;
+            return `${prefix}-${number.toString().padStart(2, '0')}`;
+        }
+
+        function handleEmergency(urgency) {
+            ticketData.urgency = 'Emergência'; // Força nível Vermelho
+            
+            const manchester = calculateManchester();
+            ticketData.manchester = manchester;
+            ticketData.ticketNumber = generateManchesterTicket(manchester.prefix);
+            
+            prepareTicketUI();
+            setStep('ticket');
+
+            // ENVIA OS DADOS PARA A PLANILHA AQUI (Se for emergência)
+            enviarDadosParaPlanilha(ticketData); 
+        }
+
+        function handleSymptom(symptom) {
+            ticketData.symptom = symptom;
+            if (symptom === 'Dor no Corpo') setStep('body-map');
+            else { ticketData.bodyPart = ''; ticketData.painLevel = 0; setStep('wheelchair'); }
+        }
+
+        const subPartsDict = {
+            'Braço Direito': ['Parte Superior do Braço', 'Cotovelo', 'Antebraço', 'Pulso'],
+            'Braço Esquerdo': ['Parte Superior do Braço', 'Cotovelo', 'Antebraço', 'Pulso'],
+            'Braço Direito (Costas)': ['Parte Superior (Tríceps)', 'Cotovelo', 'Antebraço', 'Pulso'],
+            'Braço Esquerdo (Costas)': ['Parte Superior (Tríceps)', 'Cotovelo', 'Antebraço', 'Pulso'],
+            
+            'Perna Direita': ['Coxa', 'Joelho', 'Canela', 'Tornozelo'],
+            'Perna Esquerda': ['Coxa', 'Joelho', 'Canela', 'Tornozelo'],
+            'Perna Direita (Costas)': ['Parte Traseira da Coxa', 'Parte de Trás do Joelho', 'Panturrilha', 'Tornozelo'],
+            'Perna Esquerda (Costas)': ['Parte Traseira da Coxa', 'Parte de Trás do Joelho', 'Panturrilha', 'Tornozelo'],
+            
+            'Mão Direita': ['Palma da Mão', 'Dedos'],
+            'Mão Esquerda': ['Palma da Mão', 'Dedos'],
+            'Mão Direita (Costas)': ['Costas da Mão', 'Dedos'],
+            'Mão Esquerda (Costas)': ['Costas da Mão', 'Dedos']
+        };
+
+        function handleBodyPart(part) { 
+            if (subPartsDict[part]) {
+                lastBodySelectionStep = 'sub-body-map';
+                document.getElementById('sub-body-title').innerText = `${part}`;
+                const container = document.getElementById('sub-body-buttons');
+                container.innerHTML = ''; 
+                
+                // Controle de visibilidade do mapa visual (Braço vs Perna)
+                const armVisual = document.getElementById('sub-body-visual-arm');
+                const legVisual = document.getElementById('sub-body-visual-leg');
+                
+                // Reseta visibilidade
+                armVisual.classList.add('hidden'); armVisual.classList.remove('flex');
+                legVisual.classList.add('hidden'); legVisual.classList.remove('flex');
+
+                if (part.includes('Braço')) {
+                    armVisual.classList.remove('hidden');
+                    armVisual.classList.add('flex');
+                } else if (part.includes('Perna')) {
+                    legVisual.classList.remove('hidden');
+                    legVisual.classList.add('flex');
+                }
+
+                subPartsDict[part].forEach(sub => {
+                    const btn = document.createElement('button');
+                    btn.className = "border-[8px] rounded-3xl text-3xl md:text-5xl font-black active:scale-95 transition-transform flex items-center justify-center p-8 shadow-xl bg-sky-100 border-sky-600 text-sky-950 hover:bg-sky-200 h-32 md:h-40 text-center leading-tight";
+                    btn.innerText = sub;
+                    btn.onclick = () => handleSubBodyPart(`${part} - ${sub}`);
+                    container.appendChild(btn);
+                });
+                
+                setStep('sub-body-map');
+                lucide.createIcons(); // Recarrega os ícones (como as setas da imagem) ao abrir a tela
+            } else {
+                lastBodySelectionStep = 'body-map';
+                ticketData.bodyPart = part; 
+                setStep('pain-level'); 
+            }
+        }
+
+        function handleSubBodyPart(fullPartName) {
+            ticketData.bodyPart = fullPartName;
+            setStep('pain-level');
+        }
+
+        function goBackFromPainLevel() {
+            if (lastBodySelectionStep === 'sub-body-map') {
+                setStep('sub-body-map');
+            } else {
+                setStep('body-map');
+            }
+        }
+
+        function handlePainLevel(level) { ticketData.painLevel = level; setStep('wheelchair'); }
+        function goBackFromWheelchair() { if (ticketData.symptom === 'Dor no Corpo') setStep('pain-level'); else setStep('symptoms'); }
+
+        function handleWheelchair(needsWheelchair) {
+            ticketData.needsWheelchair = needsWheelchair;
+            
+            // Invoca Protocolo de Manchester
+            const manchester = calculateManchester();
+            ticketData.manchester = manchester;
+            ticketData.ticketNumber = generateManchesterTicket(manchester.prefix);
+            
+            prepareTicketUI();
+            setStep('ticket');
+
+            // ENVIA OS DADOS PARA A PLANILHA AQUI (Fluxo normal finalizado)
+            enviarDadosParaPlanilha(ticketData);
+        }
+
+        function prepareTicketUI() {
+            const m = ticketData.manchester;
+            const band = document.getElementById('ticket-header-band');
+            const bg = document.getElementById('ticket-urgency-bg');
+            const urgencyText = document.getElementById('ticket-urgency-text');
+            const numberText = document.getElementById('ticket-number');
+            const wheelchairAlert = document.getElementById('ticket-wheelchair-alert');
+            const patientInfoText = document.getElementById('ticket-patient-info');
+            const symptomInfoText = document.getElementById('ticket-symptom-info');
+            const leftMessage = document.getElementById('ticket-left-message');
+
+            patientInfoText.innerText = `${ticketData.name} - ${ticketData.age} anos`;
+
+            if (ticketData.symptom) {
+                let info = `<div>Motivo: ${ticketData.symptom}</div>`;
+                if (ticketData.bodyPart) info += `<div>Local: ${ticketData.bodyPart}</div>`;
+                if (ticketData.painLevel > 0) info += `<div class="mt-2 text-3xl font-black">Nível da Dor: ${ticketData.painLevel}/10</div>`;
+                symptomInfoText.innerHTML = info;
+                symptomInfoText.classList.remove('hidden');
+                symptomInfoText.classList.add('flex');
+            } else { symptomInfoText.classList.add('hidden'); }
+
+            if (ticketData.symptom === 'Exames ou Consulta') { leftMessage.classList.remove('hidden'); leftMessage.classList.add('flex'); }
+            else { leftMessage.classList.add('hidden'); leftMessage.classList.remove('flex'); }
+
+            // Lógica de Cores Baseado no Manchester
+            let colorClass = ''; let bgClass = ''; let textClass = ''; let numClass = '';
+            
+            switch(m.colorCode) {
+                case 'red':
+                    colorClass = 'bg-red-600'; bgClass = 'bg-red-50'; textClass = 'text-red-600'; numClass = 'text-red-700'; break;
+                case 'orange':
+                    colorClass = 'bg-orange-500'; bgClass = 'bg-orange-50'; textClass = 'text-orange-600'; numClass = 'text-orange-700'; break;
+                case 'yellow':
+                    colorClass = 'bg-yellow-400'; bgClass = 'bg-yellow-50'; textClass = 'text-yellow-600'; numClass = 'text-yellow-700'; break;
+                case 'green':
+                    colorClass = 'bg-green-600'; bgClass = 'bg-green-50'; textClass = 'text-green-600'; numClass = 'text-green-700'; break;
+                case 'blue':
+                    colorClass = 'bg-blue-600'; bgClass = 'bg-blue-50'; textClass = 'text-blue-600'; numClass = 'text-blue-900'; break;
+            }
+
+            band.className = `absolute top-0 left-0 right-0 h-8 ${colorClass}`;
+            bg.className = `py-12 rounded-2xl mb-8 ${bgClass} border-4 ${colorClass.replace('bg-', 'border-')} border-opacity-30`;
+            
+            // Adicionando informações do tempo de protocolo no texto
+            urgencyText.className = `text-4xl font-bold mb-4 ${textClass}`;
+            urgencyText.innerHTML = `${m.urgencyName.toUpperCase()} <span class="text-xl block mt-2 opacity-80">Classificação: ${m.colorName} | Espera máx: ${m.maxWait}</span>`;
+            
+            numberText.className = `text-8xl md:text-[100px] font-black tracking-tighter ${numClass}`;
+            numberText.innerText = ticketData.ticketNumber;
+
+            if (ticketData.needsWheelchair) wheelchairAlert.classList.remove('hidden');
+            else wheelchairAlert.classList.add('hidden');
+        }
+
+        function resetApp() {
+            ticketData = { name: '', age: '', symptom: '', bodyPart: '', painLevel: 0, urgency: '', needsWheelchair: false, ticketNumber: '', manchester: null };
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-age').value = '';
+            
+            if (!audioEnabled) {
+                audioEnabled = true;
+                document.getElementById('icon-audio-on').classList.remove('hidden');
+                document.getElementById('icon-audio-off').classList.add('hidden');
+                document.getElementById('text-audio').innerText = 'Voz Ligada';
+            }
+
+            setStep('home');
+        }
+
+        document.getElementById('btn-audio').addEventListener('click', () => {
+            audioEnabled = !audioEnabled;
+            const iconOn = document.getElementById('icon-audio-on');
+            const iconOff = document.getElementById('icon-audio-off');
+            const textAudio = document.getElementById('text-audio');
+            if (audioEnabled) {
+                iconOn.classList.remove('hidden'); iconOff.classList.add('hidden'); textAudio.innerText = 'Voz Ligada';
+            } else {
+                iconOn.classList.add('hidden'); iconOff.classList.remove('hidden'); textAudio.innerText = 'Voz Desligada';
+                window.speechSynthesis.cancel();
+            }
+        });
+
+        window.onload = () => { setTimeout(() => { announceStep('home'); }, 500); };
+    </script>
+</body>
+</html>
